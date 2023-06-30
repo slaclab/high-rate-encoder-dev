@@ -22,7 +22,7 @@ SFP[1] = LCLS-II Timing Receiver
 
 <!--- ######################################################## -->
 
-# PGPv4 Virtual Channel mapping on SFP[0]
+# PGPv4[6Gb/s] Virtual Channel mapping on SFP[0]
 
 ```
 VC[0] = SRPv3
