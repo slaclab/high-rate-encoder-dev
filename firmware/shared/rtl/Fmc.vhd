@@ -32,18 +32,19 @@ entity Fmc is
       TPD_G        : time    := 1 ns;
       SIMULATION_G : boolean := false);
    port (
-      -- Clock and Reset
-      axilClk         : in    sl;
-      axilRst         : in    sl;
       -- FMC Ports
       fmcLaP          : inout slv(33 downto 0);
       fmcLaN          : inout slv(33 downto 0);
-      -- Trigger Interface
+      -- Trigger Interface (timingRxClk domain)
       triggerData     : in    TriggerEventDataType;
-      -- AXI-Stream Interface
+      -- AXI-Stream Interface (dataMsgClk domain)
+      dataMsgClk      : in    sl;
+      dataMsgRst      : in    sl;
       dataMsgMaster   : out   AxiStreamMasterType;
       dataMsgSlave    : in    AxiStreamSlaveType;
-      -- AXI-Lite Interface
+      -- AXI-Lite Interface (timingRxClk domain)
+      timingRxClk     : in    sl;
+      timingRxRst     : in    sl;
       axilReadMaster  : in    AxiLiteReadMasterType;
       axilReadSlave   : out   AxiLiteReadSlaveType;
       axilWriteMaster : in    AxiLiteWriteMasterType;
@@ -118,7 +119,7 @@ begin
       port map (
          I  => fmcLaP(6),
          IB => fmcLaN(6),
-         C  => axilClk,
+         C  => timingRxClk,
          Q1 => xSig,
          Q2 => open);
 
@@ -129,7 +130,7 @@ begin
       port map (
          I  => fmcLaP(10),
          IB => fmcLaN(10),
-         C  => axilClk,
+         C  => timingRxClk,
          Q1 => eSig,
          Q2 => open);
 
@@ -140,7 +141,7 @@ begin
       port map (
          I  => fmcLaP(14),
          IB => fmcLaN(14),
-         C  => axilClk,
+         C  => timingRxClk,
          Q1 => pSig,
          Q2 => open);
 
@@ -151,7 +152,7 @@ begin
       port map (
          I  => fmcLaP(18),
          IB => fmcLaN(18),
-         C  => axilClk,
+         C  => timingRxClk,
          Q1 => qSig,
          Q2 => open);
 
@@ -162,7 +163,7 @@ begin
       port map (
          I  => fmcLaP(27),
          IB => fmcLaN(27),
-         C  => axilClk,
+         C  => timingRxClk,
          Q1 => aSig,
          Q2 => open);
 
@@ -173,7 +174,7 @@ begin
       port map (
          I  => fmcLaP(1),
          IB => fmcLaN(1),
-         C  => axilClk,
+         C  => timingRxClk,
          Q1 => bSig,
          Q2 => open);
 
@@ -184,12 +185,12 @@ begin
       port map (
          I  => fmcLaP(5),
          IB => fmcLaN(5),
-         C  => axilClk,
+         C  => timingRxClk,
          Q1 => zSig,
          Q2 => open);
 
-   comb : process (axilReadMaster, axilRst, axilWriteMaster, r, triggerData,
-                   txSlave) is
+   comb : process (axilReadMaster, axilWriteMaster, r, timingRxRst,
+                   triggerData, txSlave) is
       variable v        : RegType;
       variable trigger  : sl;
       variable trigCode : slv(7 downto 0);
@@ -372,7 +373,7 @@ begin
       axilReadSlave  <= r.axilReadSlave;
 
       -- Reset
-      if (axilRst = '1') then
+      if (timingRxRst = '1') then
          v := REG_INIT_C;
       end if;
 
@@ -381,9 +382,9 @@ begin
 
    end process comb;
 
-   seq : process (axilClk) is
+   seq : process (timingRxClk) is
    begin
-      if rising_edge(axilClk) then
+      if rising_edge(timingRxClk) then
          r <= rin after TPD_G;
       end if;
    end process seq;
@@ -394,7 +395,7 @@ begin
          TPD_G               => TPD_G,
          SLAVE_READY_EN_G    => true,
          -- FIFO configurations
-         GEN_SYNC_FIFO_G     => true,
+         GEN_SYNC_FIFO_G     => false,
          FIFO_ADDR_WIDTH_G   => 10,
          MEMORY_TYPE_G       => "block",
          -- AXI Stream Port Configurations
@@ -402,13 +403,13 @@ begin
          MASTER_AXI_CONFIG_G => PGP4_AXIS_CONFIG_C)
       port map (
          -- Slave Port
-         sAxisClk    => axilClk,
-         sAxisRst    => axilRst,
+         sAxisClk    => timingRxClk,
+         sAxisRst    => timingRxRst,
          sAxisMaster => r.txMaster,
          sAxisSlave  => txSlave,
          -- Master Port
-         mAxisClk    => axilClk,
-         mAxisRst    => axilRst,
+         mAxisClk    => dataMsgClk,
+         mAxisRst    => dataMsgRst,
          mAxisMaster => dataMsgMaster,
          mAxisSlave  => dataMsgSlave);
 

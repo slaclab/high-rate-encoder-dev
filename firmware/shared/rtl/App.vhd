@@ -71,6 +71,11 @@ architecture mapping of App is
    signal axilReadMasters  : AxiLiteReadMasterArray(NUM_AXIL_MASTERS_C-1 downto 0);
    signal axilReadSlaves   : AxiLiteReadSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_SLVERR_C);
 
+   signal fmcWriteMaster : AxiLiteWriteMasterType;
+   signal fmcWriteSlave  : AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_SLVERR_C;
+   signal fmcReadMaster  : AxiLiteReadMasterType;
+   signal fmcReadSlave   : AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_SLVERR_C;
+
    signal eventTimingMsgMaster : AxiStreamMasterType := AXI_STREAM_MASTER_INIT_C;
    signal eventTimingMsgSlave  : AxiStreamSlaveType  := AXI_STREAM_SLAVE_FORCE_C;
    signal eventTrigMsgMaster   : AxiStreamMasterType := AXI_STREAM_MASTER_INIT_C;
@@ -83,6 +88,9 @@ architecture mapping of App is
 
    signal dataMsgMaster : AxiStreamMasterType := AXI_STREAM_MASTER_INIT_C;
    signal dataMsgSlave  : AxiStreamSlaveType  := AXI_STREAM_SLAVE_FORCE_C;
+
+   signal timingRxClk : sl;
+   signal timingRxRst : sl;
 
 begin
 
@@ -112,6 +120,27 @@ begin
          axiClk              => axilClk,
          axiClkRst           => axilRst);
 
+   U_AxiLiteAsync : entity surf.AxiLiteAsync
+      generic map (
+         TPD_G           => TPD_G,
+         COMMON_CLK_G    => false,
+         NUM_ADDR_BITS_G => 24)
+      port map (
+         -- Slave Interface
+         sAxiClk         => axilClk,
+         sAxiClkRst      => axilRst,
+         sAxiReadMaster  => axilReadMasters(FMC_INDEX_C),
+         sAxiReadSlave   => axilReadSlaves(FMC_INDEX_C),
+         sAxiWriteMaster => axilWriteMasters(FMC_INDEX_C),
+         sAxiWriteSlave  => axilWriteSlaves(FMC_INDEX_C),
+         -- Master Interface
+         mAxiClk         => timingRxClk,
+         mAxiClkRst      => timingRxRst,
+         mAxiReadMaster  => fmcReadMaster,
+         mAxiReadSlave   => fmcReadSlave,
+         mAxiWriteMaster => fmcWriteMaster,
+         mAxiWriteSlave  => fmcWriteSlave);
+
    --------------------------------
    -- Application TX Streaming Module
    --------------------------------
@@ -120,22 +149,23 @@ begin
          TPD_G        => TPD_G,
          SIMULATION_G => SIMULATION_G)
       port map (
-         -- Clock and Reset
-         axilClk         => axilClk,
-         axilRst         => axilRst,
          -- FMC Ports
          fmcLaP          => fmcHpcLaP,
          fmcLaN          => fmcHpcLaN,
-         -- Trigger Interface
+         -- Trigger Interface (timingRxClk domain)
          triggerData     => triggerData,
-         -- AXI-Stream Interface
+         -- AXI-Stream Interface (dataMsgClk domain)
+         dataMsgClk      => axilClk,
+         dataMsgRst      => axilRst,
          dataMsgMaster   => dataMsgMaster,
          dataMsgSlave    => dataMsgSlave,
-         -- AXI-Lite Interface
-         axilReadMaster  => axilReadMasters(FMC_INDEX_C),
-         axilReadSlave   => axilReadSlaves(FMC_INDEX_C),
-         axilWriteMaster => axilWriteMasters(FMC_INDEX_C),
-         axilWriteSlave  => axilWriteSlaves(FMC_INDEX_C));
+         -- AXI-Lite Interface (timingRxClk domain)
+         timingRxClk     => timingRxClk,
+         timingRxRst     => timingRxRst,
+         axilReadMaster  => fmcReadMaster,
+         axilReadSlave   => fmcReadSlave,
+         axilWriteMaster => fmcWriteMaster,
+         axilWriteSlave  => fmcWriteSlave);
 
    ------------------
    -- Timing Receiver
@@ -156,9 +186,11 @@ begin
          userClk156               => userClk156,
          userClk25                => userClk25,
          userRst25                => userRst25,
+         timingRxClkOut           => timingRxClk,
+         timingRxRstOut           => timingRxRst,
          -- Trigger interface
-         triggerClk               => axilClk,
-         triggerRst               => axilRst,
+         triggerClk               => timingRxClk,
+         triggerRst               => timingRxRst,
          triggerData(0)           => triggerData,
          -- L1 trigger feedback (optional)
          l1Clk                    => axilClk,
