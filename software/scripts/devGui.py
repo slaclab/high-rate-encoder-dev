@@ -1,0 +1,101 @@
+#!/usr/bin/env python3
+#-----------------------------------------------------------------------------
+# This file is part of the 'high-rate-encoder-dev'. It is subject to
+# the license terms in the LICENSE.txt file found in the top-level directory
+# of this distribution and at:
+#    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html.
+# No part of the 'high-rate-encoder-dev', including this file, may be
+# copied, modified, propagated, or distributed except according to the terms
+# contained in the LICENSE.txt file.
+#-----------------------------------------------------------------------------
+
+import os
+import sys
+import argparse
+import importlib
+import rogue
+import pyrogue.pydm
+
+if __name__ == "__main__":
+
+#################################################################
+
+    # Set the argument parser
+    parser = argparse.ArgumentParser()
+
+    # Convert str to bool
+    argBool = lambda s: s.lower() in ['true', 't', 'yes', '1']
+
+    # Add arguments
+    parser.add_argument(
+        "--dev",
+        type     = str,
+        required = False,
+        default  = '/dev/datadev_0',
+        help     = "path to device",
+    )
+
+    parser.add_argument(
+        "--lane",
+        type     = int,
+        required = False,
+        default  = 0,
+        help     = "DMA Lane Index",
+    )
+
+    parser.add_argument(
+        "--standAloneMode",
+        type     = argBool,
+        required = False,
+        default  = False, # Default: False = using fiber timing
+        help     = "False = using fiber timing, True = locally generated timing",
+    )
+
+    parser.add_argument(
+        "--releaseZip",
+        type     = str,
+        required = False,
+        default  = None,
+        help     = "Sets the default YAML configuration file to be loaded at the root.start()",
+    )
+
+    # Get the arguments
+    args = parser.parse_args()
+
+    #################################################################
+
+    # First see if submodule packages are already in the python path
+    try:
+        import axi_pcie_core
+        import lcls2_pgp_fw_lib
+        import lcls_timing_core
+        import l2si_core
+        import surf
+
+    # Otherwise assume it is relative in a standard development directory structure
+    except:
+
+        # Check for release zip file path
+        if args.releaseZip is not None:
+            pyrogue.addLibraryPath(args.releaseZip + '/python')
+        else:
+            import setupLibPaths
+
+    # Load the cameralink-gateway package
+    import high_rate_encoder_dev
+
+    #################################################################
+
+    with high_rate_encoder_dev.Root(
+            dev            = args.dev,
+            lane           = args.lane,
+            standAloneMode = args.standAloneMode,
+        ) as root:
+
+        pyrogue.pydm.runPyDM(
+            serverList = root.zmqServer.address,
+            sizeX      = 800,
+            sizeY      = 800,
+        )
+
+    #################################################################

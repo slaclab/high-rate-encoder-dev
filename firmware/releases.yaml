@@ -1,0 +1,35 @@
+
+GitBase: ..
+
+TopRoguePackage: high_rate_encoder_dev
+
+RoguePackages:
+  - submodules/axi-pcie-core/python
+  - submodules/clink-gateway-fw-lib/python
+  - submodules/l2si-core/python
+  - submodules/lcls2-pgp-fw-lib/python
+  - submodules/lcls-timing-core/python
+  - submodules/surf/python
+  - python
+
+RogueConfig:
+  - ../software/config
+
+RogueScripts:
+#  - ../software/scripts/devGui
+
+Targets:
+  HighRateEncoderKcu105:
+    ImageDir: targets/HighRateEncoderKcu105/images
+    Extensions:
+      - bit
+      - mcs
+      - ltx
+
+Releases:
+  high_rate_encoder_dev:
+    Primary: True
+    Targets:
+      - HighRateEncoderKcu105
+    Types:
+      - Rogue
