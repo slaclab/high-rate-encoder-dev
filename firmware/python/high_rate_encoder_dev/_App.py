@@ -19,8 +19,9 @@ class App(pr.Device):
         super().__init__(**kwargs)
 
         self.add(devBoard.Fmc(
-            offset = 0*0x0010_0000,
-            expand = True,
+            offset  = 0*0x0010_0000,
+            expand  = True,
+            enabled = False, # Do not configure until after timing link is up
         ))
 
         self.add(shared.TimingRx(

@@ -160,6 +160,10 @@ class Root(pr.Root):
         print(f'Loading {self.defaultFile} Configuration File...')
         self.ReadAll()
         self.LoadConfig(self.defaultFile)
+
+        # Enable the FMC core after timing link is up
+        self.App.Fmc.enable.set(True)
+        self.App.Fmc.writeAndVerifyBlocks(force=True, recurse=True)
         self.ReadAll()
 
     # Function calls after loading YAML configuration
