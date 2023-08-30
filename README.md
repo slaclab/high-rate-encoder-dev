@@ -17,6 +17,8 @@ $ git clone --recursive git@github.com:slaclab/high-rate-encoder-dev
 
 # KCU105 Setup for QSPI Boot
 
+For booting up the KCU105 via the QSPI PROM, you will need to setup the SW15 switch with position#1 in the arrow direction:
+
 ![KCU105 Setup for QSPI Boot](https://github.com/slaclab/Simple-10GbE-RUDP-KCU105-Example/blob/main/docs/images/SW15.png)
 
 <!--- ######################################################## -->
