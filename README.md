@@ -17,7 +17,7 @@ $ git clone --recursive git@github.com:slaclab/high-rate-encoder-dev
 
 # KCU105 Setup for QSPI Boot
 
-<img href="https://github.com/slaclab/Simple-10GbE-RUDP-KCU105-Example/blob/main/docs/images/SW15.png" width="200">
+![KCU105 Setup for QSPI Boot](https://github.com/slaclab/Simple-10GbE-RUDP-KCU105-Example/blob/main/docs/images/SW15.png)
 
 <!--- ######################################################## -->
 
