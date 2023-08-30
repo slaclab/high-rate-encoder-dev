@@ -18,7 +18,7 @@ class Fmc(pr.Device):
             name         = 'Position',
             description  = 'Encoder position',
             offset       = 0x00,
-            bitSize      = 64,
+            bitSize      = 32,
             mode         = 'RO',
             pollInterval = 1,
         ))
@@ -26,9 +26,8 @@ class Fmc(pr.Device):
         self.add(pr.RemoteVariable(
             name         = 'MissedTrigCnt',
             description  = 'Number of missed triggers due to back pressure',
-            offset       = 0x08,
-            bitSize      = 16,
-            bitOffset    = 0,
+            offset       = 0x04,
+            bitSize      = 8,
             mode         = 'RO',
             pollInterval = 1,
         ))
@@ -37,13 +36,12 @@ class Fmc(pr.Device):
             name         = 'EncErrCnt',
             description  = 'Number of malformed encoder transitions detected',
             offset       = 0x08,
-            bitSize      = 16,
-            bitOffset    = 16,
+            bitSize      = 8,
             mode         = 'RO',
             pollInterval = 1,
         ))
 
-        encSign = ['X','E','P','Q','A','B','Z']
+        encSign = ['X','E','P','Q','A','B','Z','Elatch','Platch','Qlatch']
         for i in range(len(encSign)):
             self.add(pr.RemoteVariable(
                 name         = f'{encSign[i]}',
@@ -70,6 +68,24 @@ class Fmc(pr.Device):
             offset       = 0x14,
             bitSize      = 1,
             function     = lambda cmd: cmd.post(1),
+        ))
+
+        self.add(pr.RemoteCommand(
+            name         = 'LatchClear',
+            description  = 'clears the latches back to zero',
+            offset       = 0x18,
+            bitSize      = 1,
+            function     = lambda cmd: cmd.post(1),
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'Polarity',
+            description  = '0: non-inverted, 1: Inverted',
+            offset       = 0x1C,
+            bitSize      = 1,
+            mode         = 'RO',
+            pollInterval = 1,
+            base         = pr.Bool,
         ))
 
     def hardReset(self):

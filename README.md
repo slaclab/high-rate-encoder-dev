@@ -11,6 +11,14 @@ https://confluence.slac.stanford.edu/x/vJmDFg
 ```
 $ git clone --recursive git@github.com:slaclab/high-rate-encoder-dev
 ```
+
+
+<!--- ######################################################## -->
+
+# KCU105 Setup for QSPI Boot
+
+<img href="https://github.com/slaclab/Simple-10GbE-RUDP-KCU105-Example/blob/main/docs/images/SW15.png" width="200">
+
 <!--- ######################################################## -->
 
 # KCU105 SFP[1:0] Fiber mapping
@@ -29,10 +37,24 @@ VC[0] = SRPv3
 VC[1] = Event Builder Batcher (super-frame)
 VC[1].DEST[0] = XPM Trigger Message (sub-frame)
 VC[1].DEST[1] = XPM Transition Message (sub-frame)
-VC[1].DEST[2] = Encoder 64-bit position value (sub-frame)
+VC[1].DEST[2] = Encoder 64-bit Message (sub-frame)
 VC[1].DEST[3] = XPM Timing Message (sub-frame)
 VC[2] = Xilinx Virtual Cable (XVC)
 VC[3] = Unused
+```
+
+<!--- ######################################################## -->
+
+# Encoder 64-bit Message
+
+```
+BIT[31:00] = Encoder position
+BIT[39:32] = Encoder Error Counter
+BIT[47:40] = Missed Trigger Counter
+BIT[48]    = "E" latch
+BIT[49]    = "P" latch
+BIT[50]    = "Q" latch
+BIT[63:51] = Reserved (zeros)
 ```
 
 <!--- ######################################################## -->
@@ -86,6 +108,14 @@ where <PATH_TO_IMAGE_DIR> is path to image directory (example: ../firmware/targe
 <!--- ######################################################## -->
 
 # Example of starting up GUI in stand alone mode (locally generated timing)
+
+1) Setup the rogue environment
+```
+$ cd high-rate-encoder-dev/software
+$ source setup_env_slac.sh
+```
+
+2) Run the python GUI in stand alone mode
 ```
 $ python scripts/devGui.py --standAloneMode 1
 Then execute the StartRun() command to start the triggering

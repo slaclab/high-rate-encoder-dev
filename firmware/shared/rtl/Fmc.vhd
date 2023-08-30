@@ -62,7 +62,9 @@ architecture rtl of Fmc is
    type RegType is record
       posRst         : sl;
       cntRst         : sl;
-      position       : slv(63 downto 0);
+      errRst         : sl;
+      polarity       : sl;
+      position       : slv(31 downto 0);
       xSig           : sl;
       eSig           : sl;
       pSig           : sl;
@@ -70,8 +72,11 @@ architecture rtl of Fmc is
       aSig           : sl;
       bSig           : sl;
       zSig           : sl;
-      encErrCnt      : slv(15 downto 0);
-      missedTrigCnt  : slv(15 downto 0);
+      eLatch         : sl;
+      pLatch         : sl;
+      qLatch         : sl;
+      encErrCnt      : slv(7 downto 0);
+      missedTrigCnt  : slv(7 downto 0);
       txMaster       : AxiStreamMasterType;
       axilReadSlave  : AxiLiteReadSlaveType;
       axilWriteSlave : AxiLiteWriteSlaveType;
@@ -81,6 +86,8 @@ architecture rtl of Fmc is
    constant REG_INIT_C : RegType := (
       posRst         => '0',
       cntRst         => '0',
+      errRst         => '0',
+      polarity       => '0',
       position       => (others => '0'),
       xSig           => '0',
       eSig           => '0',
@@ -89,6 +96,9 @@ architecture rtl of Fmc is
       aSig           => '0',
       bSig           => '0',
       zSig           => '0',
+      eLatch         => '0',
+      pLatch         => '0',
+      qLatch         => '0',
       encErrCnt      => (others => '0'),
       missedTrigCnt  => (others => '0'),
       txMaster       => axiStreamMasterInit(PGP4_AXIS_CONFIG_C),
@@ -189,8 +199,8 @@ begin
          Q1 => zSig,
          Q2 => open);
 
-   comb : process (axilReadMaster, axilWriteMaster, r, timingRxRst,
-                   triggerData, txSlave) is
+   comb : process (aSig, axilReadMaster, axilWriteMaster, bSig, eSig, pSig,
+                   qSig, r, timingRxRst, triggerData, txSlave, xSig, zSig) is
       variable v        : RegType;
       variable trigger  : sl;
       variable trigCode : slv(7 downto 0);
@@ -204,13 +214,13 @@ begin
       ----------------------------------------------------------------------
 
       -- Register the encoder values
-      v.xSig := r.xSig;
-      v.eSig := r.eSig;
-      v.pSig := r.pSig;
-      v.qSig := r.qSig;
-      v.aSig := r.aSig;
-      v.bSig := r.bSig;
-      v.zSig := r.zSig;
+      v.xSig := xSig xor r.polarity;
+      v.eSig := eSig xor r.polarity;
+      v.pSig := pSig xor r.polarity;
+      v.qSig := qSig xor r.polarity;
+      v.aSig := aSig xor r.polarity;
+      v.bSig := bSig xor r.polarity;
+      v.zSig := zSig xor r.polarity;
 
       -- Check for phase 1
       if (r.aSig = '0') and (r.bSig = '0') then
@@ -230,6 +240,21 @@ begin
 
       end if;
 
+      -- Check for E Latch
+      if (r.eSig = '1') then
+         v.eLatch := '0';
+      end if;
+
+      -- Check for P Latch
+      if (r.pSig = '1') then
+         v.pLatch := '0';
+      end if;
+
+      -- Check for Q Latch
+      if (r.qSig = '1') then
+         v.qLatch := '0';
+      end if;
+
       case r.state is
          ----------------------------------------------------------------------
          when PHASE1_S =>
@@ -243,7 +268,7 @@ begin
                v.position := r.position + 1;
 
             -- Check for encoding error
-            elsif (v.state /= PHASE1_S) then
+            elsif (v.state /= PHASE1_S) and (r.encErrCnt /= x"FF") then
                v.encErrCnt := r.encErrCnt + 1;
             end if;
          ----------------------------------------------------------------------
@@ -258,7 +283,7 @@ begin
                v.position := r.position + 1;
 
             -- Check for encoding error
-            elsif (v.state /= PHASE2_S) then
+            elsif (v.state /= PHASE2_S) and (r.encErrCnt /= x"FF") then
                v.encErrCnt := r.encErrCnt + 1;
             end if;
          ----------------------------------------------------------------------
@@ -273,7 +298,7 @@ begin
                v.position := r.position + 1;
 
             -- Check for encoding error
-            elsif (v.state /= PHASE3_S) then
+            elsif (v.state /= PHASE3_S) and (r.encErrCnt /= x"FF") then
                v.encErrCnt := r.encErrCnt + 1;
             end if;
          ----------------------------------------------------------------------
@@ -288,7 +313,7 @@ begin
                v.position := r.position + 1;
 
             -- Check for encoding error
-            elsif (v.state /= PHASE4_S) then
+            elsif (v.state /= PHASE4_S) and (r.encErrCnt /= x"FF") then
                v.encErrCnt := r.encErrCnt + 1;
             end if;
       ----------------------------------------------------------------------
@@ -317,10 +342,15 @@ begin
             v.txMaster.tValid := '1';
             v.txMaster.tLast  := '1';
 
-            -- Trigger Code
-            v.txMaster.tData(63 downto 0) := r.position;
+            -- Data Format
+            v.txMaster.tData(31 downto 0)  := r.position;
+            v.txMaster.tData(39 downto 32) := r.encErrCnt;
+            v.txMaster.tData(47 downto 40) := r.missedTrigCnt;
+            v.txMaster.tData(48)           := r.eLatch;
+            v.txMaster.tData(49)           := r.pLatch;
+            v.txMaster.tData(50)           := r.qLatch;
 
-         else
+         elsif (r.missedTrigCnt /= x"FF") then
             -- Increment error counter
             v.missedTrigCnt := r.missedTrigCnt + 1;
          end if;
@@ -334,15 +364,15 @@ begin
       -- Reset strobes
       v.posRst := '0';
       v.cntRst := '0';
+      v.errRst := '0';
 
       -- Determine the transaction type
       axiSlaveWaitTxn(axilEp, axilWriteMaster, axilReadMaster, v.axilWriteSlave, v.axilReadSlave);
 
       -- Map the read registers
       axiSlaveRegisterR(axilEp, x"00", 0, r.position);
-
-      axiSlaveRegisterR(axilEp, x"08", 0, r.missedTrigCnt);
-      axiSlaveRegisterR(axilEp, x"08", 16, r.encErrCnt);
+      axiSlaveRegisterR(axilEp, x"04", 0, r.missedTrigCnt);
+      axiSlaveRegisterR(axilEp, x"08", 0, r.encErrCnt);
 
       axiSlaveRegisterR(axilEp, x"0C", 0, r.xSig);
       axiSlaveRegisterR(axilEp, x"0C", 1, r.eSig);
@@ -351,21 +381,37 @@ begin
       axiSlaveRegisterR(axilEp, x"0C", 4, r.aSig);
       axiSlaveRegisterR(axilEp, x"0C", 5, r.bSig);
       axiSlaveRegisterR(axilEp, x"0C", 6, r.zSig);
-      axiSlaveRegisterR(axilEp, x"0C", 8, r.stateCnt);
+      axiSlaveRegisterR(axilEp, x"0C", 7, r.eLatch);
+      axiSlaveRegisterR(axilEp, x"0C", 8, r.pLatch);
+      axiSlaveRegisterR(axilEp, x"0C", 9, r.qLatch);
+      axiSlaveRegisterR(axilEp, x"0C", 10, r.stateCnt);  -- 2bits
 
       axiSlaveRegister (axilEp, x"10", 0, v.posRst);
       axiSlaveRegister (axilEp, x"14", 0, v.cntRst);
+      axiSlaveRegister (axilEp, x"18", 0, v.errRst);
+      axiSlaveRegister (axilEp, x"1C", 0, v.polarity);
 
       -- Closeout the transaction
       axiSlaveDefault(axilEp, v.axilWriteSlave, v.axilReadSlave, AXI_RESP_DECERR_C);
 
-      -- Counter resets
+      ----------------------------------------------------------------------
+
+      -- Position reset
       if (r.posRst = '1') then
          v.position := (others => '0');
       end if;
+
+      -- Counter reset
       if (r.cntRst = '1') then
          v.missedTrigCnt := (others => '0');
          v.encErrCnt     := (others => '0');
+      end if;
+
+      -- Latch reset
+      if (r.errRst = '1') then
+         v.eLatch := '0';
+         v.pLatch := '0';
+         v.qLatch := '0';
       end if;
 
       -- Outputs
