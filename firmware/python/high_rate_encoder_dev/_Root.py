@@ -165,6 +165,7 @@ class Root(pr.Root):
         self.App.Fmc.enable.set(True)
         self.App.Fmc.writeAndVerifyBlocks(force=True, recurse=True)
         self.ReadAll()
+        self.CountReset()
 
     # Function calls after loading YAML configuration
     def initialize(self):
