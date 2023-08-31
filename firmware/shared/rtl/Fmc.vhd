@@ -242,17 +242,17 @@ begin
 
       -- Check for E Latch
       if (r.eSig = '1') then
-         v.eLatch := '0';
+         v.eLatch := '1';
       end if;
 
       -- Check for P Latch
       if (r.pSig = '1') then
-         v.pLatch := '0';
+         v.pLatch := '1';
       end if;
 
       -- Check for Q Latch
       if (r.qSig = '1') then
-         v.qLatch := '0';
+         v.qLatch := '1';
       end if;
 
       case r.state is

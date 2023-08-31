@@ -83,8 +83,7 @@ class Fmc(pr.Device):
             description  = '0: non-inverted, 1: Inverted',
             offset       = 0x1C,
             bitSize      = 1,
-            mode         = 'RO',
-            pollInterval = 1,
+            mode         = 'RW',
             base         = pr.Bool,
         ))
 
