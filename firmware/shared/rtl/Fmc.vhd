@@ -215,7 +215,7 @@ begin
 
       -- Register the encoder values
       v.xSig := xSig xor r.polarity;
-      v.eSig := eSig xor r.polarity;
+      v.eSig := eSig xor not(r.polarity); -- Active LOW logic
       v.pSig := pSig xor r.polarity;
       v.qSig := qSig xor r.polarity;
       v.aSig := aSig xor r.polarity;
