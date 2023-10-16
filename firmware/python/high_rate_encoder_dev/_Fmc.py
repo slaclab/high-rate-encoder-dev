@@ -20,6 +20,7 @@ class Fmc(pr.Device):
             offset       = 0x00,
             bitSize      = 32,
             mode         = 'RO',
+            base         = pr.Int,
             pollInterval = 1,
         ))
 
@@ -82,6 +83,15 @@ class Fmc(pr.Device):
             name         = 'Polarity',
             description  = '0: non-inverted, 1: Inverted',
             offset       = 0x1C,
+            bitSize      = 1,
+            mode         = 'RW',
+            base         = pr.Bool,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'AutoPosRst',
+            description  = '0: ignore Z signal, 1: Use Z to reset the position',
+            offset       = 0x20,
             bitSize      = 1,
             mode         = 'RW',
             base         = pr.Bool,

@@ -64,6 +64,7 @@ architecture rtl of Fmc is
       cntRst         : sl;
       errRst         : sl;
       polarity       : sl;
+      autoPosRst     : sl;
       position       : slv(31 downto 0);
       xSig           : sl;
       eSig           : sl;
@@ -88,6 +89,7 @@ architecture rtl of Fmc is
       cntRst         => '0',
       errRst         => '0',
       polarity       => '0',
+      autoPosRst     => '1',            -- Enabled by default
       position       => (others => '0'),
       xSig           => '0',
       eSig           => '0',
@@ -215,7 +217,7 @@ begin
 
       -- Register the encoder values
       v.xSig := xSig xor r.polarity;
-      v.eSig := eSig xor not(r.polarity); -- Active LOW logic
+      v.eSig := eSig xor not(r.polarity);  -- Active LOW logic
       v.pSig := pSig xor r.polarity;
       v.qSig := qSig xor r.polarity;
       v.aSig := aSig xor r.polarity;
@@ -390,6 +392,7 @@ begin
       axiSlaveRegister (axilEp, x"14", 0, v.cntRst);
       axiSlaveRegister (axilEp, x"18", 0, v.errRst);
       axiSlaveRegister (axilEp, x"1C", 0, v.polarity);
+      axiSlaveRegister (axilEp, x"20", 0, v.autoPosRst);
 
       -- Closeout the transaction
       axiSlaveDefault(axilEp, v.axilWriteSlave, v.axilReadSlave, AXI_RESP_DECERR_C);
@@ -397,7 +400,7 @@ begin
       ----------------------------------------------------------------------
 
       -- Position reset
-      if (r.posRst = '1') then
+      if (r.posRst = '1') or (r.zSig = '1' and r.autoPosRst = '1') then
          v.position := (others => '0');
       end if;
 
