@@ -89,7 +89,7 @@ architecture rtl of Fmc is
       cntRst         => '0',
       errRst         => '0',
       polarity       => '0',
-      autoPosRst     => '1',            -- Enabled by default
+      autoPosRst     => '0',
       position       => (others => '0'),
       xSig           => '0',
       eSig           => '0',
@@ -392,7 +392,7 @@ begin
       axiSlaveRegister (axilEp, x"14", 0, v.cntRst);
       axiSlaveRegister (axilEp, x"18", 0, v.errRst);
       axiSlaveRegister (axilEp, x"1C", 0, v.polarity);
-      axiSlaveRegister (axilEp, x"20", 0, v.autoPosRst);
+      axiSlaveRegister (axilEp, x"20", 0, v.autoPosRst);  -- Unused
 
       -- Closeout the transaction
       axiSlaveDefault(axilEp, v.axilWriteSlave, v.axilReadSlave, AXI_RESP_DECERR_C);
@@ -400,7 +400,8 @@ begin
       ----------------------------------------------------------------------
 
       -- Position reset
-      if (r.posRst = '1') or (r.zSig = '1' and r.autoPosRst = '1') then
+      if (r.posRst = '1') then
+      -- if (r.posRst = '1') or (r.zSig = '1' and r.autoPosRst = '1') then
          v.position := (others => '0');
       end if;
 
