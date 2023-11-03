@@ -42,7 +42,7 @@ class Root(pr.Root):
 
         #################################################################
 
-        # zmqServer in rogue v6.0.0 (or later)
+        # zmqServer is not included in rogue v6.0.0 (or later)
         # if zmqSrvEn:
             # self.zmqServer = pyrogue.interfaces.ZmqServer(root=self, addr='*', port=0)
             # self.addInterface(self.zmqServer)
