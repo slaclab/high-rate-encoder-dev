@@ -21,7 +21,7 @@ import high_rate_encoder_dev  as devBoard
 import l2si_core              as l2si
 import surf.protocols.batcher as batcher
 
-rogue.Version.minVersion('6.0.0')
+rogue.Version.exactVersion('5.18.4')
 
 class Root(pr.Root):
     def __init__(   self,
@@ -42,9 +42,10 @@ class Root(pr.Root):
 
         #################################################################
 
-        if zmqSrvEn:
-            self.zmqServer = pyrogue.interfaces.ZmqServer(root=self, addr='*', port=0)
-            self.addInterface(self.zmqServer)
+        # zmqServer in rogue v6.0.0 (or later)
+        # if zmqSrvEn:
+            # self.zmqServer = pyrogue.interfaces.ZmqServer(root=self, addr='*', port=0)
+            # self.addInterface(self.zmqServer)
 
         # Start up flags
         self._pollEn   = pollEn
