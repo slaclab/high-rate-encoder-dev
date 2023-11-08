@@ -56,6 +56,7 @@ class Root(pr.Root):
         # Start up flags
         self._pollEn   = pollEn
         self._initRead = initRead
+        self._promProg = promProg
 
         # Save the path for start()
         self.defaultFile = defaultFile
@@ -156,34 +157,34 @@ class Root(pr.Root):
 
     def start(self, **kwargs):
         super().start(**kwargs)
+        if not self._promProg:
+            # Check for FW version
+            fwVersion = self.Core.AxiVersion.FpgaVersion.get()
+            if (fwVersion != self.FebVersionLock):
+                errMsg = f"""
+                    Core.AxiVersion.FpgaVersion = {fwVersion:#04x} != {self.FebVersionLock:#04x}
+                    Please update Fpga firmware using software/scripts/updateBootProm.py
+                    https://github.com/slaclab/high-rate-encoder-dev/blob/main/firmware/targets/HighRateEncoderKcu105/Makefile#L5
+                    """
+                click.secho(errMsg, bg='red')
+                raise ValueError(errMsg)
 
-        # Check for FW version
-        fwVersion = self.Core.AxiVersion.FpgaVersion.get()
-        if (fwVersion != self.FebVersionLock):
-            errMsg = f"""
-                Core.AxiVersion.FpgaVersion = {fwVersion:#04x} != {self.FebVersionLock:#04x}
-                Please update Fpga firmware using software/scripts/updateBootProm.py
-                https://github.com/slaclab/high-rate-encoder-dev/blob/main/firmware/targets/HighRateEncoderKcu105/Makefile#L5
-                """
-            click.secho(errMsg, bg='red')
-            raise ValueError(errMsg)
+            # Startup in LCLS-II mode
+            if self.standAloneMode:
+                self.App.TimingRx.ConfigureXpmMini()
+            else:
+                self.App.TimingRx.ConfigLclsTimingV2()
 
-        # Startup in LCLS-II mode
-        if self.standAloneMode:
-            self.App.TimingRx.ConfigureXpmMini()
-        else:
-            self.App.TimingRx.ConfigLclsTimingV2()
+            # Load the YAML configurations
+            print(f'Loading {self.defaultFile} Configuration File...')
+            self.ReadAll()
+            self.LoadConfig(self.defaultFile)
 
-        # Load the YAML configurations
-        print(f'Loading {self.defaultFile} Configuration File...')
-        self.ReadAll()
-        self.LoadConfig(self.defaultFile)
-
-        # Enable the FMC core after timing link is up
-        self.App.Fmc.enable.set(True)
-        self.App.Fmc.writeAndVerifyBlocks(force=True, recurse=True)
-        self.ReadAll()
-        self.CountReset()
+            # Enable the FMC core after timing link is up
+            self.App.Fmc.enable.set(True)
+            self.App.Fmc.writeAndVerifyBlocks(force=True, recurse=True)
+            self.ReadAll()
+            self.CountReset()
 
     # Function calls after loading YAML configuration
     def initialize(self):
