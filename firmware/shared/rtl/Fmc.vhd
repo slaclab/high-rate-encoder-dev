@@ -35,16 +35,16 @@ entity Fmc is
       -- FMC Ports
       fmcLaP          : inout slv(33 downto 0);
       fmcLaN          : inout slv(33 downto 0);
-      -- Trigger Interface (timingRxClk domain)
+      -- Trigger Interface (fmcClk domain)
       triggerData     : in    TriggerEventDataType;
       -- AXI-Stream Interface (dataMsgClk domain)
       dataMsgClk      : in    sl;
       dataMsgRst      : in    sl;
       dataMsgMaster   : out   AxiStreamMasterType;
       dataMsgSlave    : in    AxiStreamSlaveType;
-      -- AXI-Lite Interface (timingRxClk domain)
-      timingRxClk     : in    sl;
-      timingRxRst     : in    sl;
+      -- AXI-Lite Interface (fmcClk domain)
+      fmcClk          : in    sl;
+      fmcRst          : in    sl;
       axilReadMaster  : in    AxiLiteReadMasterType;
       axilReadSlave   : out   AxiLiteReadSlaveType;
       axilWriteMaster : in    AxiLiteWriteMasterType;
@@ -131,7 +131,7 @@ begin
       port map (
          I  => fmcLaP(6),
          IB => fmcLaN(6),
-         C  => timingRxClk,
+         C  => fmcClk,
          Q1 => xSig,
          Q2 => open);
 
@@ -142,7 +142,7 @@ begin
       port map (
          I  => fmcLaP(10),
          IB => fmcLaN(10),
-         C  => timingRxClk,
+         C  => fmcClk,
          Q1 => eSig,
          Q2 => open);
 
@@ -153,7 +153,7 @@ begin
       port map (
          I  => fmcLaP(14),
          IB => fmcLaN(14),
-         C  => timingRxClk,
+         C  => fmcClk,
          Q1 => pSig,
          Q2 => open);
 
@@ -164,7 +164,7 @@ begin
       port map (
          I  => fmcLaP(18),
          IB => fmcLaN(18),
-         C  => timingRxClk,
+         C  => fmcClk,
          Q1 => qSig,
          Q2 => open);
 
@@ -175,7 +175,7 @@ begin
       port map (
          I  => fmcLaP(27),
          IB => fmcLaN(27),
-         C  => timingRxClk,
+         C  => fmcClk,
          Q1 => aSig,
          Q2 => open);
 
@@ -186,7 +186,7 @@ begin
       port map (
          I  => fmcLaP(1),
          IB => fmcLaN(1),
-         C  => timingRxClk,
+         C  => fmcClk,
          Q1 => bSig,
          Q2 => open);
 
@@ -197,12 +197,12 @@ begin
       port map (
          I  => fmcLaP(5),
          IB => fmcLaN(5),
-         C  => timingRxClk,
+         C  => fmcClk,
          Q1 => zSig,
          Q2 => open);
 
-   comb : process (aSig, axilReadMaster, axilWriteMaster, bSig, eSig, pSig,
-                   qSig, r, timingRxRst, triggerData, txSlave, xSig, zSig) is
+   comb : process (aSig, axilReadMaster, axilWriteMaster, bSig, eSig, fmcRst,
+                   pSig, qSig, r, triggerData, txSlave, xSig, zSig) is
       variable v        : RegType;
       variable trigger  : sl;
       variable trigCode : slv(7 downto 0);
@@ -401,7 +401,7 @@ begin
 
       -- Position reset
       if (r.posRst = '1') then
-      -- if (r.posRst = '1') or (r.zSig = '1' and r.autoPosRst = '1') then
+         -- if (r.posRst = '1') or (r.zSig = '1' and r.autoPosRst = '1') then
          v.position := (others => '0');
       end if;
 
@@ -423,7 +423,7 @@ begin
       axilReadSlave  <= r.axilReadSlave;
 
       -- Reset
-      if (timingRxRst = '1') then
+      if (fmcRst = '1') then
          v := REG_INIT_C;
       end if;
 
@@ -432,9 +432,9 @@ begin
 
    end process comb;
 
-   seq : process (timingRxClk) is
+   seq : process (fmcClk) is
    begin
-      if rising_edge(timingRxClk) then
+      if rising_edge(fmcClk) then
          r <= rin after TPD_G;
       end if;
    end process seq;
@@ -453,8 +453,8 @@ begin
          MASTER_AXI_CONFIG_G => PGP4_AXIS_CONFIG_C)
       port map (
          -- Slave Port
-         sAxisClk    => timingRxClk,
-         sAxisRst    => timingRxRst,
+         sAxisClk    => fmcClk,
+         sAxisRst    => fmcRst,
          sAxisMaster => r.txMaster,
          sAxisSlave  => txSlave,
          -- Master Port

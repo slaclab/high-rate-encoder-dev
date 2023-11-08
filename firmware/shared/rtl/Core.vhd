@@ -36,6 +36,8 @@ entity Core is
       userClk156      : out   sl;
       userClk25       : out   sl;
       userRst25       : out   sl;
+      fmcClk          : out   sl;
+      fmcRst          : out   sl;
       -- Clock and Reset
       axilClk         : out   sl;
       axilRst         : out   sl;
@@ -187,6 +189,8 @@ begin
          userClk156       => userClk156,
          userClk25        => userClk25,
          userRst25        => userRst25,
+         fmcClk           => fmcClk,
+         fmcRst           => fmcRst,
          -- System Ports
          extRst           => extRst,
          -- PGP Link Status

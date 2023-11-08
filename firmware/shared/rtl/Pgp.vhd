@@ -35,6 +35,8 @@ entity Pgp is
       userClk156       : out sl;
       userClk25        : out sl;
       userRst25        : out sl;
+      fmcClk           : out sl;
+      fmcRst           : out sl;
       -- System Ports
       extRst           : in  sl;
       -- PGP Link Status
@@ -157,6 +159,29 @@ begin
          -- Reset Outputs
          rstOut(0) => axilReset,
          rstOut(1) => userRst25);
+
+   U_fmcClk : entity surf.ClockManagerUltraScale
+      generic map(
+         TPD_G             => TPD_G,
+         SIMULATION_G      => SIMULATION_G,
+         TYPE_G            => "PLL",
+         INPUT_BUFG_G      => false,
+         FB_BUFG_G         => true,
+         RST_IN_POLARITY_G => '1',
+         NUM_CLOCKS_G      => 1,
+         -- MMCM attributes
+         BANDWIDTH_G       => "OPTIMIZED",
+         CLKIN_PERIOD_G    => 6.4,      -- 156.25 MHz
+         CLKFBOUT_MULT_G   => 8,        -- 1.25GHz = 8 x 156.25 MHz
+         CLKOUT0_DIVIDE_G  => 5)        -- 250MHz = 1.25GHz/5
+      port map(
+         -- Clock Input
+         clkIn     => pgpClkBufg,
+         rstIn     => extRst,
+         -- Clock Outputs
+         clkOut(0) => fmcClk,
+         -- Reset Outputs
+         rstOut(0) => fmcRst);
 
    U_Pgp : entity surf.Pgp4GthUsWrapper
       generic map (

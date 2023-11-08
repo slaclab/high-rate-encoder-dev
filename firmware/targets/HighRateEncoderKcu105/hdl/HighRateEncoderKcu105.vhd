@@ -85,6 +85,8 @@ architecture top_level of HighRateEncoderKcu105 is
    signal userClk156 : sl;
    signal userClk25  : sl;
    signal userRst25  : sl;
+   signal fmcClk     : sl;
+   signal fmcRst     : sl;
 
 begin
 
@@ -110,6 +112,8 @@ begin
          userClk156      => userClk156,
          userClk25       => userClk25,
          userRst25       => userRst25,
+         fmcClk          => fmcClk,
+         fmcRst          => fmcRst,
          -- Clock and Reset
          axilClk         => axilClk,
          axilRst         => axilRst,
@@ -165,6 +169,8 @@ begin
          userClk156      => userClk156,
          userClk25       => userClk25,
          userRst25       => userRst25,
+         fmcClk          => fmcClk,
+         fmcRst          => fmcRst,
          -- AXI-Stream Interface
          ibPgpMaster     => ibPgpMaster,
          ibPgpSlave      => ibPgpSlave,

@@ -429,3 +429,8 @@ set_clock_groups -asynchronous \
 #     -group [get_clocks {clk238}]  \
 #     -group [get_clocks {clk371}] \
 #     -group [get_clocks {dmaClk}]
+
+set_clock_groups -asynchronous -group [get_clocks -of_objects [get_pins U_Core/U_Pgp/U_fmcClk/PllGen.U_Pll/CLKOUT0]] -group [get_clocks casMuxRxClk186]
+set_clock_groups -asynchronous -group [get_clocks -of_objects [get_pins U_Core/U_Pgp/U_fmcClk/PllGen.U_Pll/CLKOUT0]] -group [get_clocks casMuxTimingGtRxOutClk0]
+set_clock_groups -asynchronous -group [get_clocks -of_objects [get_pins U_Core/U_Pgp/U_fmcClk/PllGen.U_Pll/CLKOUT0]] -group [get_clocks casMuxTimingGtRxOutClk1]
+set_clock_groups -asynchronous -group [get_clocks -of_objects [get_pins U_Core/U_Pgp/U_fmcClk/PllGen.U_Pll/CLKOUT0]] -group [get_clocks -of_objects [get_pins U_Core/U_Pgp/U_axilClk/PllGen.U_Pll/CLKOUT0]]

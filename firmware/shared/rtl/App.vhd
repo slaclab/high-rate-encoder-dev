@@ -37,6 +37,8 @@ entity App is
       userClk156      : in    sl;
       userClk25       : in    sl;
       userRst25       : in    sl;
+      fmcClk          : in    sl;
+      fmcRst          : in    sl;
       -- AXI-Stream Interface
       ibPgpMaster     : out   AxiStreamMasterType;
       ibPgpSlave      : in    AxiStreamSlaveType;
@@ -89,9 +91,6 @@ architecture mapping of App is
    signal dataMsgMaster : AxiStreamMasterType := AXI_STREAM_MASTER_INIT_C;
    signal dataMsgSlave  : AxiStreamSlaveType  := AXI_STREAM_SLAVE_FORCE_C;
 
-   signal timingRxClk : sl;
-   signal timingRxRst : sl;
-
 begin
 
    -------------------------------
@@ -134,8 +133,8 @@ begin
          sAxiWriteMaster => axilWriteMasters(FMC_INDEX_C),
          sAxiWriteSlave  => axilWriteSlaves(FMC_INDEX_C),
          -- Master Interface
-         mAxiClk         => timingRxClk,
-         mAxiClkRst      => timingRxRst,
+         mAxiClk         => fmcClk,
+         mAxiClkRst      => fmcRst,
          mAxiReadMaster  => fmcReadMaster,
          mAxiReadSlave   => fmcReadSlave,
          mAxiWriteMaster => fmcWriteMaster,
@@ -152,16 +151,16 @@ begin
          -- FMC Ports
          fmcLaP          => fmcHpcLaP,
          fmcLaN          => fmcHpcLaN,
-         -- Trigger Interface (timingRxClk domain)
+         -- Trigger Interface (fmcClk domain)
          triggerData     => triggerData,
          -- AXI-Stream Interface (dataMsgClk domain)
          dataMsgClk      => axilClk,
          dataMsgRst      => axilRst,
          dataMsgMaster   => dataMsgMaster,
          dataMsgSlave    => dataMsgSlave,
-         -- AXI-Lite Interface (timingRxClk domain)
-         timingRxClk     => timingRxClk,
-         timingRxRst     => timingRxRst,
+         -- AXI-Lite Interface (fmcClk domain)
+         fmcClk          => fmcClk,
+         fmcRst          => fmcRst,
          axilReadMaster  => fmcReadMaster,
          axilReadSlave   => fmcReadSlave,
          axilWriteMaster => fmcWriteMaster,
@@ -186,11 +185,9 @@ begin
          userClk156               => userClk156,
          userClk25                => userClk25,
          userRst25                => userRst25,
-         timingRxClkOut           => timingRxClk,
-         timingRxRstOut           => timingRxRst,
          -- Trigger interface
-         triggerClk               => timingRxClk,
-         triggerRst               => timingRxRst,
+         triggerClk               => fmcClk,
+         triggerRst               => fmcRst,
          triggerData(0)           => triggerData,
          -- L1 trigger feedback (optional)
          l1Clk                    => axilClk,

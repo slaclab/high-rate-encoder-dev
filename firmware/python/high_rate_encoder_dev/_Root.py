@@ -21,6 +21,7 @@ import high_rate_encoder_dev  as devBoard
 import l2si_core              as l2si
 import surf.protocols.batcher as batcher
 
+import click
 rogue.Version.exactVersion('5.18.4')
 
 class Root(pr.Root):
@@ -40,12 +41,17 @@ class Root(pr.Root):
             **kwargs):
         super().__init__(**kwargs)
 
-        #################################################################
+        # Set the FEB firmware Version lock = https://github.com/slaclab/high-rate-encoder-dev/blob/main/firmware/targets/HighRateEncoderKcu105/Makefile#L5
+        self.FebVersionLock = 0x02010000
 
+        ######################################################
         # zmqServer is not included in rogue v6.0.0 (or later)
+        ######################################################
         # if zmqSrvEn:
             # self.zmqServer = pyrogue.interfaces.ZmqServer(root=self, addr='*', port=0)
             # self.addInterface(self.zmqServer)
+
+        #################################################################
 
         # Start up flags
         self._pollEn   = pollEn
@@ -150,6 +156,17 @@ class Root(pr.Root):
 
     def start(self, **kwargs):
         super().start(**kwargs)
+
+        # Check for FW version
+        fwVersion = self.Core.AxiVersion.FpgaVersion.get()
+        if (fwVersion != self.FebVersionLock):
+            errMsg = f"""
+                Core.AxiVersion.FpgaVersion = {fwVersion:#04x} != {self.FebVersionLock:#04x}
+                Please update Fpga firmware using software/scripts/updateBootProm.py
+                https://github.com/slaclab/high-rate-encoder-dev/blob/main/firmware/targets/HighRateEncoderKcu105/Makefile#L5
+                """
+            click.secho(errMsg, bg='red')
+            raise ValueError(errMsg)
 
         # Startup in LCLS-II mode
         if self.standAloneMode:
