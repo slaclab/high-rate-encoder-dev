@@ -49,15 +49,20 @@ class Core(pr.Device):
                 name        = 'AxisMon',
                 offset      = 0x0011_0000,
                 numberLanes = 8,
+                chName      = [
+                    'TxVc[0]','TxVc[1]','TxVc[2]','TxVc[3]',
+                    'RxVc[0]','RxVc[1]','RxVc[2]','RxVc[3]',
+                ],
                 expand      = True,
             ))
 
             # Close the streams that you don't want to monitor
-            for i in range(8):
+            for i in range(4):
+                self.AxisMon.RxVc[i]._expand = False
                 if (i == 1):
-                    self.AxisMon.Ch[i]._expand = True
+                    self.AxisMon.TxVc[i]._expand = True
                 else:
-                    self.AxisMon.Ch[i]._expand = False
+                    self.AxisMon.TxVc[i]._expand = False
 
             for i in range(2):
                 self.add(xceiver.Sfp(
