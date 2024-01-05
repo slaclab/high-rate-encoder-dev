@@ -93,8 +93,7 @@ if __name__ == "__main__":
         ) as root:
 
         pyrogue.pydm.runPyDM(
-            root       = root,
-            # serverList = root.zmqServer.address,
+            serverList = root.zmqServer.address,
             sizeX      = 800,
             sizeY      = 800,
         )
