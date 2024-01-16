@@ -176,9 +176,10 @@ class Root(pr.Root):
                 self.App.TimingRx.ConfigLclsTimingV2()
 
             # Load the YAML configurations
-            print(f'Loading {self.defaultFile} Configuration File...')
-            self.ReadAll()
-            self.LoadConfig(self.defaultFile)
+            if (self.defaultFile != ''):
+                print(f'Loading {self.defaultFile} Configuration File...')
+                self.ReadAll()
+                self.LoadConfig(self.defaultFile)
 
             # Enable the FMC core after timing link is up
             self.App.Fmc.enable.set(True)
