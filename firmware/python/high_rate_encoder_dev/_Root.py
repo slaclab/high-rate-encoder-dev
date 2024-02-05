@@ -42,7 +42,7 @@ class Root(pr.Root):
         super().__init__(**kwargs)
 
         # Set the FEB firmware Version lock = https://github.com/slaclab/high-rate-encoder-dev/blob/main/firmware/targets/HighRateEncoderKcu105/Makefile#L5
-        self.FebVersionLock = 0x02020000
+        self.FebVersionLock = 0x02030000
 
         ######################################################
         # zmqServer is not included in rogue v6.0.0 (or later)
