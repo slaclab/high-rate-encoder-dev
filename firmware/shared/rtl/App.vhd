@@ -223,8 +223,8 @@ begin
          SLAVE_READY_EN_G    => true,
          -- FIFO configurations
          GEN_SYNC_FIFO_G     => true,
-         FIFO_ADDR_WIDTH_G   => 10,
-         FIFO_PAUSE_THRESH_G => 128,
+         FIFO_ADDR_WIDTH_G   => 10, -- up to 128 events
+         FIFO_PAUSE_THRESH_G => 32, -- 64B per event, pause after 4 events
          MEMORY_TYPE_G       => "block",
          -- AXI Stream Port Configurations
          SLAVE_AXI_CONFIG_G  => PGP4_AXIS_CONFIG_C,
