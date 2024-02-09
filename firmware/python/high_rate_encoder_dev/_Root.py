@@ -48,7 +48,7 @@ class Root(pr.Root):
         # zmqServer is not included in rogue v6.0.0 (or later)
         ######################################################
         if zmqSrvEn:
-            self.zmqServer = pyrogue.interfaces.ZmqServer(root=self, addr='*', port=0)
+            self.zmqServer = pyrogue.interfaces.ZmqServer(root=self, addr='127.0.0.1', port=0)
             self.addInterface(self.zmqServer)
 
         #################################################################
